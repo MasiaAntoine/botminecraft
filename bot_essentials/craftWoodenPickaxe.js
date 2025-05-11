@@ -1,5 +1,5 @@
 const { Vec3 } = require("vec3");
-const { goals } = require("mineflayer-pathfinder"); // Importation ajoutée
+const { walkAround } = require("./utils");
 
 async function craftWoodenPickaxe(bot) {
   // Vérifier si le bot a déjà une pioche en bois dans son inventaire
@@ -257,10 +257,8 @@ async function breakCraftingTable(bot) {
     await bot.dig(craftingTableBlock);
     console.log("Table de craft cassée et récupérée.");
 
-    // Marche dans une zone 3x3 autour de la position de la table de craft
-    setTimeout(async () => {
-      await walkAroundTable(bot, craftingTableBlock.position);
-    }, 1000);
+    // Appeler la fonction générique pour marcher dans une zone 3x3
+    await walkAround(bot, craftingTableBlock.position);
   } catch (err) {
     console.log(
       `Erreur lors de la destruction de la table de craft : ${err.message}`

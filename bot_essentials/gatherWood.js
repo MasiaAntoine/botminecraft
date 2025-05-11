@@ -1,6 +1,8 @@
 // gatherWood.js
 const { Vec3 } = require("vec3");
 const { goals } = require("mineflayer-pathfinder");
+const { walkAround } = require("./utils");
+const craftWoodenPickaxe = require("./craftWoodenPickaxe");
 
 function gatherWood(bot) {
   const radius = 10; // Rayon de recherche des arbres
@@ -139,7 +141,6 @@ async function chopTreeFromBottomToTop(bot, tree) {
   );
 
   for (const blockPos of sortedTrunkBlocks) {
-    // Convertir blockPos en Vec3 si ce n'est pas déjà une instance de Vec3
     const position = new Vec3(blockPos.x, blockPos.y, blockPos.z);
     const block = bot.blockAt(position);
 
@@ -162,9 +163,9 @@ async function chopTreeFromBottomToTop(bot, tree) {
 
   console.log(`Arbre ID: ${tree.id} complètement coupé.`);
 
-  // Appeler la fonction pour marcher dans une zone 3x3 autour du tronc
+  // Appeler la fonction générique pour marcher dans une zone 3x3
   const initialTrunkPosition = sortedTrunkBlocks[0]; // Position du tronc le plus bas
-  await walkAroundTree(bot, initialTrunkPosition);
+  await walkAround(bot, initialTrunkPosition);
 }
 
 async function walkAroundTree(bot, trunkPosition) {
