@@ -1,6 +1,15 @@
 const { Vec3 } = require("vec3");
+const { goals } = require("mineflayer-pathfinder"); // Importation ajoutée
 
 async function craftWoodenPickaxe(bot) {
+  // Vérifier si le bot a déjà une pioche en bois dans son inventaire
+  const woodenPickaxe = itemByName(bot, "wooden_pickaxe");
+  if (woodenPickaxe) {
+    console.log("Une pioche en bois est déjà dans l'inventaire. Équipement...");
+    await equipWoodenPickaxe(bot);
+    return; // Saute toutes les étapes suivantes
+  }
+
   const craftingTableID = bot.registry.itemsByName.crafting_table.id;
 
   // Vérifier si le bot a déjà une table de craft dans l'inventaire
@@ -20,8 +29,10 @@ async function craftWoodenPickaxe(bot) {
 
   // Équiper la pioche en bois
   await equipWoodenPickaxe(bot);
-}
 
+  // Casser et récupérer la table de craft
+  await breakCraftingTable(bot);
+}
 // Fonction utilitaire pour trouver un objet par son nom dans l'inventaire
 function itemByName(bot, name) {
   const items = bot.inventory.items();
@@ -225,7 +236,7 @@ async function equipWoodenPickaxe(bot) {
   }
 }
 
-// Fonction pour casser la table de craft et la récupérer
+// Fonction pour casser la table de craft, la récupérer et marcher dans une zone 3x3
 async function breakCraftingTable(bot) {
   const craftingTableBlock = bot.findBlock({
     matching: bot.registry.blocksByName.crafting_table.id,
@@ -245,11 +256,48 @@ async function breakCraftingTable(bot) {
     // Casse la table de craft
     await bot.dig(craftingTableBlock);
     console.log("Table de craft cassée et récupérée.");
+
+    // Marche dans une zone 3x3 autour de la position de la table de craft
+    setTimeout(async () => {
+      await walkAroundTable(bot, craftingTableBlock.position);
+    }, 1000);
   } catch (err) {
     console.log(
       `Erreur lors de la destruction de la table de craft : ${err.message}`
     );
   }
+}
+
+// Fonction pour marcher dans une zone 3x3 autour de la position de la table de craft
+async function walkAroundTable(bot, tablePosition) {
+  console.log(
+    `Début de la marche dans une zone 3x3 autour de la table de craft aux coordonnées (${tablePosition.x}, ${tablePosition.y}, ${tablePosition.z}).`
+  );
+
+  // Définir les positions dans une zone 3x3 autour de la table
+  const positions = [
+    new Vec3(tablePosition.x - 1, tablePosition.y, tablePosition.z - 1),
+    new Vec3(tablePosition.x, tablePosition.y, tablePosition.z - 1),
+    new Vec3(tablePosition.x + 1, tablePosition.y, tablePosition.z - 1),
+    new Vec3(tablePosition.x - 1, tablePosition.y, tablePosition.z),
+    new Vec3(tablePosition.x + 1, tablePosition.y, tablePosition.z),
+    new Vec3(tablePosition.x - 1, tablePosition.y, tablePosition.z + 1),
+    new Vec3(tablePosition.x, tablePosition.y, tablePosition.z + 1),
+    new Vec3(tablePosition.x + 1, tablePosition.y, tablePosition.z + 1),
+  ];
+
+  for (const position of positions) {
+    console.log(
+      `Déplacement vers la position (${position.x}, ${position.y}, ${position.z}).`
+    );
+    const goal = new goals.GoalBlock(position.x, position.y, position.z);
+    bot.pathfinder.setGoal(goal, true); // true pour permettre des mouvements fluides
+
+    // Attendre 0,5 seconde avant de passer à la position suivante
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  console.log("Marche dans la zone 3x3 terminée.");
 }
 
 module.exports = craftWoodenPickaxe;
