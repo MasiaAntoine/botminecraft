@@ -2,9 +2,17 @@
 const { Vec3 } = require("vec3");
 const { goals } = require("mineflayer-pathfinder");
 const { walkAround } = require("./utils");
-const craftWoodenPickaxe = require("./craftWoodenPickaxe");
 
-function gatherWood(bot) {
+async function gatherWood(bot) {
+  console.log("Le bot a spawn. Vérification de l'inventaire...");
+
+  // Vérifier si le bot a du bois dans son inventaire
+  const wood = bot.inventory.items().find((item) => item.name.includes("log"));
+  if (wood) {
+    console.log("Le bot a du bois dans son inventaire.");
+    return Promise.resolve(); // Retourne une Promise résolue
+  }
+
   const radius = 10; // Rayon de recherche des arbres
   const woodBlocks = bot.findBlocks({
     matching: (block) => block.name.includes("log"), // Identifier les blocs de bois
@@ -60,12 +68,18 @@ function gatherWood(bot) {
   // Sélectionner un arbre au hasard
   const randomTree = selectRandomTree(readableTrees);
 
-  // Déplacer le bot vers l'arbre sélectionné
-  moveToTree(bot, randomTree);
+  if (!randomTree) {
+    console.log("Aucun arbre valide trouvé. Arrêt de la collecte de bois.");
+    return Promise.resolve();
+  }
 
-  setTimeout(async () => {
+  // Déplacer le bot vers l'arbre sélectionné
+  try {
+    moveToTree(bot, randomTree);
     await chopTreeFromBottomToTop(bot, randomTree);
-  }, 1000);
+  } catch (err) {
+    console.error("Erreur lors de la collecte de bois :", err);
+  }
 }
 
 function selectRandomTree(trees) {
@@ -165,7 +179,7 @@ async function chopTreeFromBottomToTop(bot, tree) {
 
   // Appeler la fonction générique pour marcher dans une zone 3x3
   const initialTrunkPosition = sortedTrunkBlocks[0]; // Position du tronc le plus bas
-  await walkAround(bot, initialTrunkPosition);
+  await walkAroundTree(bot, initialTrunkPosition); // Attendre que walkAroundTree se termine
 }
 
 async function walkAroundTree(bot, trunkPosition) {

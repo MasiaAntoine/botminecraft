@@ -2,36 +2,36 @@ const { Vec3 } = require("vec3");
 const { walkAround } = require("./utils");
 
 async function craftWoodenPickaxe(bot) {
-  // Vérifier si le bot a déjà une pioche en bois dans son inventaire
   const woodenPickaxe = itemByName(bot, "wooden_pickaxe");
   if (woodenPickaxe) {
     console.log("Une pioche en bois est déjà dans l'inventaire. Équipement...");
     await equipWoodenPickaxe(bot);
-    return; // Saute toutes les étapes suivantes
+    return Promise.resolve();
   }
 
   const craftingTableID = bot.registry.itemsByName.crafting_table.id;
-
-  // Vérifier si le bot a déjà une table de craft dans l'inventaire
   const craftingTable = itemByName(bot, "crafting_table");
+
   if (!craftingTable) {
     console.log(
       "Je n'ai pas de table de craft dans mon inventaire. Fabrication..."
     );
     await craftCraftingTable(bot);
+
+    if (!itemByName(bot, "crafting_table")) {
+      console.log("Impossible de fabriquer une table de craft. Arrêt.");
+      return Promise.resolve();
+    }
   }
 
-  // Poser la table de craft
-  await placeCraftingTable(bot);
-
-  // Fabriquer une pioche en bois
-  await craftWoodenPickaxeWithTable(bot);
-
-  // Équiper la pioche en bois
-  await equipWoodenPickaxe(bot);
-
-  // Casser et récupérer la table de craft
-  await breakCraftingTable(bot);
+  try {
+    await placeCraftingTable(bot);
+    await craftWoodenPickaxeWithTable(bot);
+    await equipWoodenPickaxe(bot);
+    await breakCraftingTable(bot);
+  } catch (err) {
+    console.error("Erreur lors de la fabrication de la pioche en bois :", err);
+  }
 }
 // Fonction utilitaire pour trouver un objet par son nom dans l'inventaire
 function itemByName(bot, name) {

@@ -21,23 +21,12 @@ function createBot() {
   handleSpawn(bot);
 
   bot.once("spawn", async () => {
-    console.log("Le bot a spawn. Vérification de l'inventaire...");
-
-    // Vérifier si le bot a du bois dans son inventaire
-    const wood = bot.inventory
-      .items()
-      .find((item) => item.name.includes("log"));
-
-    if (wood) {
-      console.log(
-        "Le bot a du bois dans son inventaire. Fabrication en cours..."
-      );
+    try {
+      await gatherWood(bot);
       await craftWoodenPickaxe(bot);
-      return;
+    } catch (err) {
+      console.error("Erreur lors de l'exécution des tâches :", err);
     }
-
-    console.log("Le bot n'a pas de bois. Lancement de gatherWood...");
-    gatherWood(bot);
   });
 
   bot.on("error", (err) => {
